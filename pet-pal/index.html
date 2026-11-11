@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PawPal 宠伴 · 养宠成长记录与社区</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --brand: #F97316;
+  --brand-deep: #EA580C;
+  --brand-soft: #FFF3E8;
+  --bg: #F7F1E8;
+  --card: #FFFFFF;
+  --text: #3D2C1E;
+  --muted: #9C8B7A;
+  --line: #F0E4D6;
+  --red: #E5484D;
+  --orange: #B87400;
+  --shadow: 0 6px 20px rgba(120, 80, 40, 0.08);
+  --r: 16px;
+}
+html { height: 100%; }
+body {
+  font-family: system-ui, -apple-system, "PingFang SC", "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100%;
+}
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: #FFFDFA;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.07);
+}
+@media (min-width: 560px) {
+  .app { margin: 24px auto 48px; border-radius: 28px; min-height: calc(100dvh - 72px); overflow: hidden; }
+}
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  background: linear-gradient(135deg, #FF9A5A, #F97316);
+  color: #fff;
+  padding: 16px 18px 12px;
+  border-radius: 0 0 20px 20px;
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand .logo { font-size: 30px; }
+.brand h1 { font-size: 18px; letter-spacing: 0.5px; }
+.brand p { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+.pet-chips { display: flex; gap: 8px; margin-top: 12px; overflow-x: auto; scrollbar-width: none; }
+.pet-chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0; border: 1.5px solid rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.18); color: #fff;
+  border-radius: 999px; padding: 5px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.chip.on { background: #fff; color: var(--brand-deep); border-color: #fff; }
+.chip-empty { font-size: 12px; opacity: 0.9; align-self: center; }
+main { flex: 1; padding: 16px 16px 28px; }
+.view { display: none; animation: fadein 0.22s ease; }
+.view.active { display: block; }
+@keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.page-head { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 14px; }
+.page-head h2 { font-size: 17px; }
+.card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 16px; box-shadow: var(--shadow); margin-bottom: 14px;
+}
+.card h3 { font-size: 14px; margin-bottom: 10px; }
+.card-title-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+.card-title-row h3 { margin-bottom: 0; }
+.muted { color: var(--muted); font-size: 12px; }
+.empty { color: var(--muted); font-size: 13px; text-align: center; padding: 18px 0; line-height: 1.7; }
+.btn {
+  border: 0; border-radius: 999px; padding: 10px 18px;
+  font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+  transition: transform 0.1s ease, opacity 0.12s ease;
+}
+.btn:active { transform: scale(0.97); opacity: 0.9; }
+.btn.primary { background: var(--brand); color: #fff; }
+.btn.ghost { background: var(--brand-soft); color: var(--brand-deep); }
+.btn.block { width: 100%; }
+.btn.sm { padding: 7px 13px; font-size: 13px; }
+.icon-btn {
+  border: 0; background: none; color: var(--muted); cursor: pointer;
+  font-size: 14px; padding: 4px 6px; border-radius: 8px; flex-shrink: 0;
+}
+.icon-btn:hover { background: #F7EFE4; color: var(--red); }
+.link-danger {
+  display: block; margin: 14px auto 0; border: 0; background: none;
+  color: var(--red); font-size: 12px; cursor: pointer; text-decoration: underline; font-family: inherit;
+}
+.foot-note { font-size: 11px; color: var(--muted); text-align: center; margin: 14px 0 8px; line-height: 1.6; }
+
+.pet-hero .hero-top { display: flex; align-items: center; gap: 14px; }
+.avatar-big {
+  width: 64px; height: 64px; border-radius: 22px; background: var(--brand-soft);
+  display: flex; align-items: center; justify-content: center; font-size: 34px; flex-shrink: 0;
+}
+.hero-info { flex: 1; min-width: 0; }
+.hero-info h2 { font-size: 18px; }
+.hero-info h2 .g { color: var(--brand-deep); font-size: 14px; margin-left: 4px; }
+.hero-info p { font-size: 13px; color: var(--muted); margin-top: 3px; }
+.hero-stats { display: flex; margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 14px; }
+.hero-stats > div { flex: 1; text-align: center; }
+.hero-stats b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; }
+.hero-stats span { font-size: 11px; color: var(--muted); }
+
+.wchart { width: 100%; height: auto; display: block; }
+.cline { fill: none; stroke: var(--brand); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.cdot { fill: #fff; stroke: var(--brand); stroke-width: 2; }
+.cdot.last { fill: var(--brand); }
+.cgrid { stroke: var(--line); stroke-width: 1; }
+.clab { font-size: 10px; fill: var(--muted); }
+.cval { font-size: 12px; font-weight: 700; fill: var(--brand-deep); }
+.delta { font-size: 12px; font-weight: 600; color: var(--brand-deep); }
+
+.badge { font-size: 11px; padding: 2px 9px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+.badge.red { background: #FEECEC; color: var(--red); }
+.badge.orange { background: #FFF4E0; color: var(--orange); }
+.care-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+.care-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.care-row:first-child { padding-top: 0; }
+.care-row .ico { font-size: 20px; }
+.care-main { flex: 1; min-width: 0; }
+.care-main b { font-size: 13px; display: block; }
+.care-main p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.rec-row { display: flex; align-items: flex-start; gap: 10px; padding: 11px 0; border-bottom: 1px dashed var(--line); }
+.rec-row:last-child { border-bottom: 0; padding-bottom: 2px; }
+.rec-ico { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.rec-main { flex: 1; min-width: 0; }
+.rec-main b { font-size: 14px; }
+.rec-main p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.rec-main .note { color: #7A6A58; }
+.rec-side { text-align: right; flex-shrink: 0; }
+.rec-side time { font-size: 12px; color: var(--muted); display: block; }
+
+.timeline { position: relative; padding-left: 40px; margin-top: 4px; }
+.timeline::before { content: ""; position: absolute; left: 17px; top: 8px; bottom: 8px; width: 2px; background: var(--line); border-radius: 2px; }
+.tl-node { position: relative; padding: 0 0 18px; }
+.tl-node:last-child { padding-bottom: 4px; }
+.tl-ico {
+  position: absolute; left: -40px; top: 0; width: 36px; height: 36px;
+  background: var(--brand-soft); border: 1.5px solid #FFDFC2; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.tl-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; box-shadow: var(--shadow); }
+.tl-card .tl-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tl-card b { font-size: 14px; }
+.tl-card time { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.tl-card p { font-size: 13px; margin-top: 5px; line-height: 1.55; }
+.tl-card p.muted { font-size: 12px; }
+
+.city-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.city-row label { font-size: 13px; font-weight: 600; }
+.friend-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.friend-card { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: #FFFBF6; }
+.friend-card .f-top { display: flex; align-items: center; gap: 8px; }
+.friend-card .f-ava { font-size: 26px; }
+.friend-card b { font-size: 14px; display: block; }
+.friend-card .f-pet { font-size: 11px; color: var(--muted); }
+.friend-card .f-bio { font-size: 12px; color: #7A6A58; margin: 8px 0; line-height: 1.5; min-height: 18px; }
+.friend-card .f-foot { display: flex; align-items: center; justify-content: space-between; }
+.friend-card .f-dist { font-size: 11px; color: var(--muted); }
+.wave-btn { border: 0; background: var(--brand-soft); color: var(--brand-deep); font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; cursor: pointer; font-family: inherit; }
+.wave-btn:active { opacity: 0.8; }
+
+.composer { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.composer textarea {
+  width: 100%; min-height: 64px; resize: vertical; border: 1.5px solid var(--line);
+  border-radius: 12px; padding: 10px 12px; font-size: 13px; font-family: inherit; color: var(--text);
+  background: #FFFBF6; outline: none;
+}
+.composer textarea:focus { border-color: var(--brand); }
+.composer .row { display: flex; justify-content: flex-end; }
+.post { display: flex; gap: 10px; padding: 12px 0; border-top: 1px dashed var(--line); }
+.post:first-of-type { border-top: 0; padding-top: 2px; }
+.post .p-ava { font-size: 26px; flex-shrink: 0; }
+.post .p-main { flex: 1; min-width: 0; }
+.post .p-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.post .p-meta b { font-size: 13px; }
+.post .p-meta .tag { font-size: 10px; background: var(--brand-soft); color: var(--brand-deep); padding: 1px 7px; border-radius: 999px; font-weight: 600; }
+.post .p-content { font-size: 13px; margin-top: 5px; line-height: 1.6; word-break: break-word; }
+.post .p-foot { margin-top: 7px; display: flex; align-items: center; gap: 4px; }
+.like-btn { border: 0; background: none; cursor: pointer; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; font-family: inherit; padding: 3px 6px; border-radius: 8px; }
+.like-btn:hover { background: #F7EFE4; }
+.like-btn.liked { color: var(--red); font-weight: 700; }
+
+.tabbar {
+  position: sticky; bottom: 0; z-index: 20;
+  display: flex; background: #fff; border-top: 1px solid var(--line);
+  padding: 6px 10px calc(6px + env(safe-area-inset-bottom));
+}
+.tabbar button {
+  flex: 1; border: 0; background: none; cursor: pointer; font-family: inherit;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 6px 0 4px; color: var(--muted); border-radius: 14px; font-size: 19px;
+}
+.tabbar button span { font-size: 11px; font-weight: 600; }
+.tabbar button.active { color: var(--brand-deep); background: var(--brand-soft); }
+
+.modal-mask {
+  position: fixed; inset: 0; background: rgba(40, 25, 10, 0.45);
+  display: none; align-items: flex-end; justify-content: center; z-index: 50; padding: 0;
+}
+.modal-mask.open { display: flex; }
+.modal {
+  background: #fff; border-radius: 22px 22px 0 0; width: 100%; max-width: 480px;
+  max-height: 86dvh; overflow-y: auto; padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
+  animation: slideup 0.2s ease;
+}
+@keyframes slideup { from { transform: translateY(40px); opacity: 0.5; } to { transform: none; opacity: 1; } }
+@media (min-width: 560px) {
+  .modal-mask { align-items: center; }
+  .modal { border-radius: 22px; max-width: 420px; }
+}
+.modal h3 { font-size: 16px; margin-bottom: 14px; }
+.modal form label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 6px; }
+.modal form input[type="text"], .modal form input[type="date"], .modal form input[type="number"], .modal form select, .modal form textarea {
+  width: 100%; margin-top: 6px; border: 1.5px solid var(--line); border-radius: 12px;
+  padding: 10px 12px; font-size: 14px; font-family: inherit; color: var(--text); background: #FFFBF6; outline: none;
+}
+.modal form input:focus, .modal form select:focus, .modal form textarea:focus { border-color: var(--brand); }
+.modal form textarea { min-height: 72px; resize: vertical; }
+.emoji-pick { display: flex; gap: 6px; flex-wrap: wrap; }
+.emoji-pick label.ep { margin: 0; }
+.emoji-pick input { display: none; }
+.emoji-pick span { font-size: 24px; padding: 6px 8px; border-radius: 12px; border: 2px solid transparent; cursor: pointer; display: block; }
+.emoji-pick input:checked + span { border-color: var(--brand); background: var(--brand-soft); }
+.seg { display: flex; gap: 8px; margin-top: 6px; }
+.seg label { flex: 1; margin: 0; }
+.seg input { display: none; }
+.seg span { display: block; text-align: center; padding: 9px 0; border: 1.5px solid var(--line); border-radius: 12px; font-size: 13px; cursor: pointer; }
+.seg input:checked + span { border-color: var(--brand); background: var(--brand-soft); color: var(--brand-deep); font-weight: 700; }
+.modal .btn.block { margin-top: 18px; }
+.field-group { display: none; }
+.field-group.show { display: block; }
+.type-tabs { display: flex; gap: 8px; }
+.type-tabs label { flex: 1; margin: 0; }
+.type-tabs input { display: none; }
+.type-tabs span { display: block; text-align: center; padding: 8px 0; border: 1.5px solid var(--line); border-radius: 12px; font-size: 13px; cursor: pointer; }
+.type-tabs input:checked + span { border-color: var(--brand); background: var(--brand-soft); color: var(--brand-deep); font-weight: 700; }
+
+.toast {
+  position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%) translateY(16px);
+  background: rgba(45, 30, 15, 0.92); color: #fff; font-size: 13px;
+  padding: 10px 18px; border-radius: 999px; opacity: 0; pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease; z-index: 60; max-width: 86%; text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🐾</span>
+      <div>
+        <h1>PawPal 宠伴</h1>
+        <p>记录毛孩子的每一天 · 遇见身边的宠友</p>
+      </div>
+    </div>
+    <div class="pet-chips" id="petChips"></div>
+  </header>
+  <main id="main">
+    <section class="view active" id="view-profile"></section>
+    <section class="view" id="view-health"></section>
+    <section class="view" id="view-timeline"></section>
+    <section class="view" id="view-community"></section>
+  </main>
+  <nav class="tabbar" id="tabbar">
+    <button data-view="profile" class="active">🐕<span>档案</span></button>
+    <button data-view="health">💉<span>健康</span></button>
+    <button data-view="timeline">🗓️<span>时间线</span></button>
+    <button data-view="community">💬<span>社区</span></button>
+  </nav>
+</div>
+<div class="modal-mask" id="modalMask"><div class="modal" id="modalBox"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const LS = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v === null || v === undefined ? d : v; } catch (e) { return d; } },
+  set(k, v) { localStorage.setItem(k, JSON.stringify(v)); },
+  del(k) { localStorage.removeItem(k); }
+};
+const KEYS = { pets: "pp_pets", recs: "pp_records", posts: "pp_posts", likes: "pp_likes", sel: "pp_pet", city: "pp_city", seeded: "pp_seeded" };
+
+let pets = LS.get(KEYS.pets, []);
+let records = LS.get(KEYS.recs, []);
+let posts = LS.get(KEYS.posts, []);
+let likedIds = LS.get(KEYS.likes, []);
+let selId = LS.get(KEYS.sel, null);
+let city = LS.get(KEYS.city, "全部");
+let currentView = "profile";
+
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const iso = dt => dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0") + "-" + String(dt.getDate()).padStart(2, "0");
+const todayStr = () => iso(new Date());
+const dstr = off => { const d = new Date(); d.setDate(d.getDate() + off); return iso(d); };
+const daysUntil = ds => Math.ceil((new Date(ds + "T00:00:00") - new Date(todayStr() + "T00:00:00")) / 86400000);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const savePets = () => LS.set(KEYS.pets, pets);
+const saveRecs = () => LS.set(KEYS.recs, records);
+const savePosts = () => LS.set(KEYS.posts, posts);
+const saveSel = () => LS.set(KEYS.sel, selId);
+const cur = () => pets.find(p => p.id === selId) || null;
+const viewEl = v => document.getElementById("view-" + v);
+
+function petAge(b) {
+  if (!b) return "年龄未知";
+  const t = new Date(); const dt = new Date(b + "T00:00:00");
+  if (isNaN(dt) || dt > t) return "年龄未知";
+  let m = (t.getFullYear() - dt.getFullYear()) * 12 + (t.getMonth() - dt.getMonth());
+  if (t.getDate() < dt.getDate()) m--;
+  if (m < 1) return "未满 1 个月";
+  if (m < 12) return m + " 个月大";
+  return Math.floor(m / 12) + " 岁" + (m % 12 ? " " + (m % 12) + " 个月" : "");
+}
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return "刚刚";
+  if (s < 3600) return Math.floor(s / 60) + " 分钟前";
+  if (s < 86400) return Math.floor(s / 3600) + " 小时前";
+  return Math.floor(s / 86400) + " 天前";
+}
+const recsOf = id => records.filter(r => r.petId === id);
+const byDate = (a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+
+function seed() {
+  if (pets.length || LS.get(KEYS.seeded, false)) return;
+  const dd = uid(), xq = uid();
+  pets = [
+    { id: dd, name: "豆豆", avatar: "🐶", breed: "柯基", gender: "男", birthday: dstr(-600) },
+    { id: xq, name: "雪球", avatar: "🐱", breed: "布偶猫", gender: "女", birthday: dstr(-820) }
+  ];
+  records = [
+    { id: uid(), petId: dd, type: "weight", date: dstr(-190), value: 4.2 },
+    { id: uid(), petId: dd, type: "weight", date: dstr(-150), value: 4.6 },
+    { id: uid(), petId: dd, type: "weight", date: dstr(-120), value: 5.0 },
+    { id: uid(), petId: dd, type: "weight", date: dstr(-90), value: 5.2 },
+    { id: uid(), petId: dd, type: "weight", date: dstr(-60), value: 5.5 },
+    { id: uid(), petId: dd, type: "weight", date: dstr(-30), value: 5.7 },
+    { id: uid(), petId: dd, type: "weight", date: dstr(-3), value: 5.8, note: "最近胃口很好" },
+    { id: uid(), petId: dd, type: "vaccine", name: "犬四联疫苗", date: dstr(-35), next: dstr(330), note: "第 3 针" },
+    { id: uid(), petId: dd, type: "vaccine", name: "狂犬疫苗", date: dstr(-22), next: dstr(343) },
+    { id: uid(), petId: dd, type: "deworm", name: "体内驱虫（拜宠清）", date: dstr(-37), next: dstr(53) },
+    { id: uid(), petId: dd, type: "diary", date: dstr(-3), mood: "🥰", content: "今天豆豆学会了握爪手势，奖励了一块冻干，开心到原地转圈圈～" },
+    { id: uid(), petId: dd, type: "diary", date: dstr(-10), mood: "😀", content: "周末带豆豆去了宠物公园，交到了一只萨摩耶朋友，追着跑了一下午。" },
+    { id: uid(), petId: xq, type: "weight", date: dstr(-100), value: 3.6 },
+    { id: uid(), petId: xq, type: "weight", date: dstr(-30), value: 3.9 },
+    { id: uid(), petId: xq, type: "vaccine", name: "猫三联疫苗", date: dstr(-60), next: dstr(305) },
+    { id: uid(), petId: xq, type: "diary", date: dstr(-6), mood: "😅", content: "雪球把新买的猫抓板当床睡了，抓板一天就沦为床垫。" }
+  ];
+  posts = [
+    { id: uid(), author: "柯基妈妈Vicky", avatar: "👩", city: "北京", ts: Date.now() - 3600000 * 2, content: "柯基打卡！今天称了体重 11.2kg，兽医说要控制饮食了😂 大家的柯基都多重呀？", likes: 23 },
+    { id: uid(), author: "阿黄和它的猫", avatar: "🧑", city: "上海", ts: Date.now() - 3600000 * 8, content: "疫苗提醒神器真的好用，猫三联到期前 7 天就提示我了，再也不怕忘记！", likes: 15 },
+    { id: uid(), author: "汤圆的日常", avatar: "👨", city: "杭州", ts: Date.now() - 3600000 * 26, content: "第一次养猫求建议：3 个月的小猫驱虫用什么药比较温和？评论区求推荐🙏", likes: 31 },
+    { id: uid(), author: "金毛爸爸老周", avatar: "🧔", city: "北京", ts: Date.now() - 86400000 * 2, content: "周末奥森宠物友好区遛狗局，来了十几只狗子，社交…啊不，狗际关系拉满！下周末继续，同城可以评论区集合～", likes: 48 },
+    { id: uid(), author: "布偶控小鹿", avatar: "👩‍🦰", city: "深圳", ts: Date.now() - 86400000 * 3, content: "用成长时间线导出雪球的体重曲线给医生看，医生夸记录得好专业哈哈哈", likes: 12 }
+  ];
+  selId = dd;
+  city = "全部";
+  LS.set(KEYS.seeded, true);
+  savePets(); saveRecs(); savePosts(); saveSel(); LS.set(KEYS.city, city);
+}
+
+let toastTimer = null;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+function openModal(html) {
+  const mask = document.getElementById("modalMask");
+  document.getElementById("modalBox").innerHTML = html;
+  mask.classList.add("open");
+}
+function closeModal() {
+  const mask = document.getElementById("modalMask");
+  mask.classList.remove("open");
+  document.getElementById("modalBox").innerHTML = "";
+}
+document.getElementById("modalMask").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal(); });
+
+const REC_META = {
+  weight: { ico: "⚖️", label: "体重" },
+  vaccine: { ico: "💉", label: "疫苗" },
+  deworm: { ico: "🛡️", label: "驱虫" },
+  diary: { ico: "📝", label: "日记" }
+};
+const MOODS = ["😀", "🥰", "😅", "😴", "🤒"];
+const AVATARS = ["🐶", "🐱", "🐰", "🐹", "🦊", "🐢", "🦜", "🐠"];
+const FRIENDS = [
+  { id: "f1", name: "Vicky", ava: "👩", pet: "柯基 · 芝士", city: "北京", dist: "2.1km", bio: "每天 6 点晨遛，欢迎加入遛狗小分队" },
+  { id: "f2", name: "老周", ava: "🧔", pet: "金毛 · 大壮", city: "北京", dist: "4.8km", bio: "奥森常驻，周末遛狗局组织者" },
+  { id: "f3", name: "小鹿", ava: "👩‍🦰", pet: "布偶 · 年糕", city: "上海", dist: "1.3km", bio: "科学养猫派，交流猫粮和疫苗经验" },
+  { id: "f4", name: "阿哲", ava: "🧑", pet: "英短 · 煤球", city: "上海", dist: "3.6km", bio: "猫咪摄影爱好者，可约拍" },
+  { id: "f5", name: "安安", ava: "👩", pet: "泰迪 · 糯米", city: "广州", dist: "1.0km", bio: "刚养狗半年，一起从新手毕业吧" },
+  { id: "f6", name: "Ken", ava: "👨", pet: "法斗 · 包子", city: "广州", dist: "2.9km", bio: "法斗皮肤护理经验丰富，欢迎交流" },
+  { id: "f7", name: "Nina", ava: "👩‍🦱", pet: "边牧 · 奥利奥", city: "深圳", dist: "2.4km", bio: "飞盘玩家，深圳湾见！" },
+  { id: "f8", name: "大树", ava: "🧑", pet: "橘猫 · 肥仔", city: "深圳", dist: "5.2km", bio: "减肥中的胖猫家长，共勉" },
+  { id: "f9", name: "西瓜", ava: "👩", pet: "柴犬 · 阿福", city: "杭州", dist: "1.8km", bio: "西湖边遛狗搭子求组队" },
+  { id: "f10", name: "Tony", ava: "👨", pet: "萨摩 · 雪碧", city: "杭州", dist: "3.3km", bio: "白毛打理交流，欢迎萨摩家长" },
+  { id: "f11", name: "圆圆", ava: "👩‍🦰", pet: "比熊 · 汤圆", city: "成都", dist: "0.9km", bio: "小区宠友群群主，拉你进群呀" },
+  { id: "f12", name: "强子", ava: "🧔", pet: "哈士奇 · 二哈", city: "成都", dist: "4.1km", bio: "拆家经验丰富，主打一个陪伴" },
+  { id: "f13", name: "Cici", ava: "👩", pet: "银渐层 · 布丁", city: "武汉", dist: "1.6km", bio: "猫咪行为学爱好者" },
+  { id: "f14", name: "小凯", ava: "🧑", pet: "柯基 · 火锅", city: "武汉", dist: "3.0km", bio: "江滩遛狗常驻" },
+  { id: "f15", name: "菲菲", ava: "👩‍🦱", pet: "金渐层 · 芒果", city: "南京", dist: "2.2km", bio: "新手猫妈，多多关照" },
+  { id: "f16", name: "阿凯", ava: "👨", pet: "杜宾 · 老板", city: "西安", dist: "2.7km", bio: "大型犬训练交流" },
+  { id: "f17", name: "糖糖", ava: "👩", pet: "加菲 · 团子", city: "重庆", dist: "1.5km", bio: "铲屎官两年，经验值+1" }
+];
+const CITIES = ["全部", "北京", "上海", "广州", "深圳", "杭州", "成都", "武汉", "南京", "西安", "重庆"];
+
+function renderChips() {
+  const el = document.getElementById("petChips");
+  if (!pets.length) { el.innerHTML = '<span class="chip-empty">还没有宠物档案，点「档案」添加吧 →</span>'; return; }
+  if (!cur()) { selId = pets[0].id; saveSel(); }
+  el.innerHTML = pets.map(p =>
+    '<button class="chip' + (p.id === selId ? " on" : "") + '" data-act="switch-pet" data-id="' + p.id + '">' + p.avatar + esc(p.name) + "</button>"
+  ).join("");
+}
+
+function chartSVG(weights) {
+  if (!weights.length) return '<p class="empty">还没有体重记录<br>点右上角「＋ 记一笔」开始记录～</p>';
+  const w = 340, h = 176, L = 42, R = 18, T = 30, B = 34;
+  const vals = weights.map(p => p.value);
+  let min = Math.min(...vals), max = Math.max(...vals);
+  if (max - min < 0.6) { const mid = (max + min) / 2; min = mid - 0.5; max = mid + 0.5; }
+  else { const s = max - min; min -= s * 0.18; max += s * 0.18; }
+  const X = i => L + (w - L - R) * (weights.length === 1 ? 0.5 : i / (weights.length - 1));
+  const Y = v => T + (h - T - B) * (1 - (v - min) / (max - min));
+  let grid = "", labels = "";
+  for (let g = 0; g < 3; g++) {
+    const v = min + (max - min) * (0.25 + g * 0.25);
+    const y = Y(v).toFixed(1);
+    grid += '<line x1="' + L + '" y1="' + y + '" x2="' + (w - R) + '" y2="' + y + '" class="cgrid"/>';
+    labels += '<text x="' + (L - 6) + '" y="' + (Number(y) + 3.5) + '" text-anchor="end" class="clab">' + v.toFixed(1) + "</text>";
+  }
+  const path = weights.map((p, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(p.value).toFixed(1)).join(" ");
+  const dots = weights.map((p, i) => {
+    const last = i === weights.length - 1;
+    return '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(p.value).toFixed(1) + '" r="' + (last ? 5 : 3.5) + '" class="cdot' + (last ? " last" : "") + '"/>';
+  }).join("");
+  const lastP = weights[weights.length - 1];
+  const lx = Math.min(X(weights.length - 1), w - R - 22), ly = Y(lastP.value);
+  const valText = '<text x="' + lx.toFixed(1) + '" y="' + (ly - 10).toFixed(1) + '" text-anchor="middle" class="cval">' + lastP.value + 'kg</text>';
+  const xLabels = '<text x="' + X(0).toFixed(1) + '" y="' + (h - 8) + '" text-anchor="middle" class="clab">' + weights[0].date.slice(5) + "</text>" +
+    (weights.length > 1 ? '<text x="' + X(weights.length - 1).toFixed(1) + '" y="' + (h - 8) + '" text-anchor="middle" class="clab">' + lastP.date.slice(5) + "</text>" : "");
+  return '<svg viewBox="0 0 ' + w + " " + h + '" class="wchart" role="img" aria-label="体重趋势图">' + grid + labels + '<path d="' + path + '" class="cline"/>' + dots + valText + xLabels + "</svg>";
+}
+
+function recTitle(r) {
+  if (r.type === "weight") return "体重记录";
+  if (r.type === "vaccine") return esc(r.name || "疫苗接种");
+  if (r.type === "deworm") return esc(r.name || "驱虫");
+  return "成长日记";
+}
+function recSub(r) {
+  if (r.type === "weight") return "体重 " + r.value + " kg";
+  if (r.type === "vaccine" || r.type === "deworm") return r.next ? "下次时间：" + r.next : "";
+  return "";
+}
+
+function emptyPetHTML() {
+  return '<div class="card"><div class="empty">🐾 还没有宠物档案<br>从一个毛孩子开始你的记录之旅吧</div>' +
+    '<button class="btn primary block" data-act="add-pet">＋ 添加宠物</button></div>';
+}
+
+function renderProfile() {
+  const el = viewEl("profile");
+  const p = cur();
+  if (!p) { el.innerHTML = emptyPetHTML(); return; }
+  const recs = recsOf(p.id);
+  const cnt = t => recs.filter(r => r.type === t).length;
+  const ws = recs.filter(r => r.type === "weight").sort(byDate);
+  const lastW = ws.length ? ws[ws.length - 1] : null;
+  el.innerHTML =
+    '<div class="card pet-hero">' +
+      '<div class="hero-top">' +
+        '<div class="avatar-big">' + p.avatar + "</div>" +
+        '<div class="hero-info">' +
+          "<h2>" + esc(p.name) + ' <span class="g">' + (p.gender === "女" ? "♀ 女孩" : "♂ 男孩") + "</span></h2>" +
+          "<p>" + esc(p.breed || "品种未知") + " · " + petAge(p.birthday) + "</p>" +
+          '<p class="muted">生日 ' + esc(p.birthday || "—") + "</p>" +
+        "</div>" +
+        '<button class="btn ghost sm" data-act="edit-pet" data-id="' + p.id + '">编辑</button>' +
+      "</div>" +
+      '<div class="hero-stats">' +
+        "<div><b>" + (lastW ? lastW.value + "kg" : "—") + "</b><span>当前体重</span></div>" +
+        "<div><b>" + cnt("weight") + "</b><span>体重</span></div>" +
+        "<div><b>" + cnt("vaccine") + "</b><span>疫苗</span></div>" +
+        "<div><b>" + cnt("deworm") + "</b><span>驱虫</span></div>" +
+        "<div><b>" + cnt("diary") + "</b><span>日记</span></div>" +
+      "</div>" +
+    "</div>" +
+    '<button class="btn ghost block" data-act="add-record">＋ 给 ' + esc(p.name) + ' 记一笔健康数据</button>' +
+    '<button class="btn block" data-act="add-pet" style="margin-top:10px">＋ 添加一只新宠物</button>' +
+    '<p class="foot-note">数据保存在本机浏览器中，刷新不丢失<br>演示数据可随时重置</p>' +
+    '<button class="link-danger" data-act="reset-demo">重置演示数据</button>';
+}
+
+function careHTML(recs) {
+  const care = recs.filter(r => (r.type === "vaccine" || r.type === "deworm") && r.next).sort((a, b) => (a.next < b.next ? -1 : 1));
+  if (!care.length) return "";
+  const rows = care.map(r => {
+    const d = daysUntil(r.next);
+    const badge = d < 0 ? '<span class="badge red">已到期 ' + (-d) + " 天</span>"
+      : d <= 14 ? '<span class="badge orange">' + d + " 天后到期</span>"
+      : '<span class="badge" style="background:#F1EAE0;color:#9C8B7A">' + d + " 天后</span>";
+    return '<div class="care-row"><span class="ico">' + REC_META[r.type].ico + "</span>" +
+      '<div class="care-main"><b>' + recTitle(r) + "</b><p>下次：" + r.next + "</p></div>" + badge + "</div>";
+  }).join("");
+  return '<div class="card"><h3>⏰ 疫苗 / 驱虫提醒</h3>' + rows + "</div>";
+}
+
+function recRowsHTML(recs) {
+  if (!recs.length) return '<p class="empty">还没有任何记录</p>';
+  return recs.map(r =>
+    '<div class="rec-row"><span class="rec-ico">' + REC_META[r.type].ico + "</span>" +
+    '<div class="rec-main"><b>' + recTitle(r) + "</b>" +
+    (recSub(r) ? "<p>" + recSub(r) + "</p>" : "") +
+    (r.note ? '<p class="note">' + esc(r.note) + "</p>" : "") +
+    (r.type === "diary" && r.content ? '<p class="note">' + (r.mood || "") + " " + esc(r.content) + "</p>" : "") +
+    "</div>" +
+    '<div class="rec-side"><time>' + r.date.slice(5) + "</time>" +
+    '<button class="icon-btn" data-act="del-record" data-id="' + r.id + '" title="删除">✕</button></div></div>'
+  ).join("");
+}
+
+function renderHealth() {
+  const el = viewEl("health");
+  const p = cur();
+  if (!p) { el.innerHTML = emptyPetHTML(); return; }
+  const recs = recsOf(p.id);
+  const ws = recs.filter(r => r.type === "weight").sort(byDate);
+  let delta = "";
+  if (ws.length >= 2) {
+    const diff = (ws[ws.length - 1].value - ws[ws.length - 2].value).toFixed(1);
+    delta = '<span class="delta">较上次 ' + (diff > 0 ? "+" : "") + diff + "kg</span>";
+  }
+  el.innerHTML =
+    '<div class="page-head"><h2>健康档案 · ' + esc(p.name) + '</h2><button class="btn primary sm" data-act="add-record">＋ 记一笔</button></div>' +
+    '<div class="card"><div class="card-title-row"><h3>📈 体重趋势</h3>' + delta + "</div>" + chartSVG(ws) + "</div>" +
+    careHTML(recs) +
+    '<div class="card"><h3>📋 记录明细</h3>' + recRowsHTML(recs.slice().sort((a, b) => -byDate(a, b))) + "</div>";
+}
+
+function renderTimeline() {
+  const el = viewEl("timeline");
+  const p = cur();
+  if (!p) { el.innerHTML = emptyPetHTML(); return; }
+  const recs = recsOf(p.id).slice().sort((a, b) => -byDate(a, b));
+  const nodes = recs.map(r =>
+    '<div class="tl-node"><span class="tl-ico">' + REC_META[r.type].ico + "</span>" +
+    '<div class="tl-card"><div class="tl-head"><b>' + REC_META[r.type].label + " · " + recTitle(r) + "</b><time>" + r.date + "</time></div>" +
+    (r.type === "weight" ? "<p>" + r.value + " kg</p>" : "") +
+    (r.type === "diary" ? "<p>" + (r.mood || "") + " " + esc(r.content || "") + "</p>" : "") +
+    ((r.type === "vaccine" || r.type === "deworm") && r.next ? "<p>下次：" + r.next + "</p>" : "") +
+    (r.note && r.type !== "diary" ? '<p class="muted">' + esc(r.note) + "</p>" : "") +
+    "</div></div>"
+  ).join("");
+  el.innerHTML =
+    '<div class="page-head"><h2>' + esc(p.name) + ' 的成长时间线</h2><button class="btn primary sm" data-act="add-diary">✍️ 写日记</button></div>' +
+    '<div class="timeline">' + (nodes || "") + "</div>" +
+    (recs.length ? "" : '<p class="empty">时间线还是空的，记录第一条体重或写一篇日记吧</p>');
+}
+
+function renderCommunity() {
+  const el = viewEl("community");
+  const friends = FRIENDS.filter(f => city === "全部" || f.city === city);
+  const myPosts = posts.slice().sort((a, b) => b.ts - a.ts);
+  const friendCards = friends.map(f =>
+    '<div class="friend-card"><div class="f-top"><span class="f-ava">' + f.ava + "</span><div><b>" + esc(f.name) + '</b><span class="f-pet">' + esc(f.pet) + "</span></div></div>" +
+    '<p class="f-bio">' + esc(f.bio) + "</p>" +
+    '<div class="f-foot"><span class="f-dist">📍 ' + f.dist + (city === "全部" ? " · " + esc(f.city) : "") + '</span><button class="wave-btn" data-act="wave" data-name="' + esc(f.name) + '">👋 打招呼</button></div></div>'
+  ).join("");
+  const postCards = myPosts.map(pt => {
+    const liked = likedIds.includes(pt.id);
+    return '<div class="post"><span class="p-ava">' + pt.avatar + "</span><div class=\"p-main\">" +
+      '<div class="p-meta"><b>' + esc(pt.author) + "</b>" +
+      (pt.mine ? '<span class="tag">我发布的</span><button class="icon-btn" data-act="del-post" data-id="' + pt.id + '" title="删除">✕</button>' : '<span class="tag">' + esc(pt.city) + "</span>") +
+      "<time class='muted' style='font-size:11px;margin-left:auto'>" + timeAgo(pt.ts) + "</time></div>" +
+      '<p class="p-content">' + esc(pt.content) + "</p>" +
+      '<div class="p-foot"><button class="like-btn' + (liked ? " liked" : "") + '" data-act="like" data-id="' + pt.id + '">' + (liked ? "❤️" : "🤍") + " <span>" + pt.likes + "</span></button></div>" +
+      "</div></div>";
+  }).join("");
+  el.innerHTML =
+    '<div class="page-head"><h2>宠友社区</h2><span class="muted">同城宠友 · 养宠日常</span></div>' +
+    '<div class="card"><h3>🐾 附近的宠友</h3>' +
+      '<div class="city-row"><label>📍 城市</label><select id="citySel">' +
+        CITIES.map(c => '<option value="' + c + '"' + (c === city ? " selected" : "") + ">" + c + "</option>").join("") +
+      "</select></div>" +
+      '<div class="friend-grid">' + (friendCards || '<p class="empty" style="grid-column:1/-1">该城市暂时没有宠友<br>试试切换其他城市～</p>') + "</div>" +
+    "</div>" +
+    '<div class="card"><h3>💬 广场 · 分享养宠日常</h3>' +
+      '<div class="composer"><textarea id="postText" placeholder="晒晒今天的毛孩子，或向宠友提问…"></textarea>' +
+      '<div class="row"><button class="btn primary sm" data-act="post">发布动态</button></div></div>' +
+      (postCards || '<p class="empty">还没有动态，来发第一条吧</p>') +
+    "</div>";
+  document.getElementById("citySel").addEventListener("change", e => {
+    city = e.target.value;
+    LS.set(KEYS.city, city);
+    renderCommunity();
+  });
+}
+
+function renderAll() {
+  renderChips();
+  ["profile", "health", "timeline", "community"].forEach(v => {
+    if (v === "profile") renderProfile();
+    else if (v === "health") renderHealth();
+    else if (v === "timeline") renderTimeline();
+    else renderCommunity();
+  });
+}
+
+document.getElementById("tabbar").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-view]");
+  if (!btn) return;
+  currentView = btn.dataset.view;
+  document.querySelectorAll("#tabbar button").forEach(b => b.classList.toggle("active", b === btn));
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === "view-" + currentView));
+});
+
+function switchPet(id) {
+  selId = id;
+  saveSel();
+  renderAll();
+}
+
+function openPetModal(id) {
+  const p = id ? pets.find(x => x.id === id) : null;
+  openModal(
+    "<h3>" + (p ? "编辑「" + esc(p.name) + "」的档案" : "添加宠物") + "</h3>" +
+    '<form id="petForm">' +
+      "<label>昵称 *<input type=\"text\" name=\"name\" required maxlength=\"12\" placeholder=\"如：豆豆\" value=\"" + (p ? esc(p.name) : "") + '"></label>' +
+      "<label>头像</label><div class=\"emoji-pick\">" +
+        AVATARS.map(a => '<label class="ep"><input type="radio" name="avatar" value="' + a + '"' + ((p ? p.avatar : AVATARS[0]) === a ? " checked" : "") + "><span>" + a + "</span></label>").join("") +
+      "</div>" +
+      '<label>品种<input type="text" name="breed" maxlength="16" placeholder="如：柯基" value="' + (p ? esc(p.breed || "") : "") + '"></label>' +
+      "<label>性别</label><div class=\"seg\">" +
+        '<label><input type="radio" name="gender" value="男"' + ((p ? p.gender : "男") === "男" ? " checked" : "") + '><span>♂ 男孩</span></label>' +
+        '<label><input type="radio" name="gender" value="女"' + ((p ? p.gender : "男") === "女" ? " checked" : "") + '><span>♀ 女孩</span></label>' +
+      "</div>" +
+      '<label>生日<input type="date" name="birthday" value="' + (p ? esc(p.birthday || "") : "") + '"></label>' +
+      '<label>当前体重（kg，选填）<input type="number" name="weight" step="0.1" min="0" max="120" placeholder="如：5.8" value="' + (p && p.weight != null ? p.weight : "") + '"></label>' +
+      '<button class="btn primary block" type="submit">保存</button>' +
+    "</form>"
+  );
+  document.getElementById("petForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const name = String(fd.get("name") || "").trim();
+    if (!name) return;
+    const data = {
+      name,
+      avatar: String(fd.get("avatar") || AVATARS[0]),
+      breed: String(fd.get("breed") || "").trim(),
+      gender: String(fd.get("gender") || "男"),
+      birthday: String(fd.get("birthday") || "")
+    };
+    const w = parseFloat(fd.get("weight"));
+    if (p) {
+      Object.assign(p, data);
+      if (!isNaN(w)) {
+        const exists = records.find(r => r.petId === p.id && r.type === "weight" && r.date === todayStr());
+        if (exists) exists.value = w; else records.push({ id: uid(), petId: p.id, type: "weight", date: todayStr(), value: w });
+        saveRecs();
+      }
+    } else {
+      const np = Object.assign({ id: uid() }, data);
+      pets.push(np);
+      selId = np.id;
+      if (!isNaN(w)) records.push({ id: uid(), petId: np.id, type: "weight", date: todayStr(), value: w });
+      saveRecs();
+    }
+    savePets(); saveSel();
+    closeModal();
+    toast(p ? "档案已更新" : "欢迎新成员 " + data.avatar + " " + data.name + "！");
+    renderAll();
+  });
+}
+
+function delPet(id) {
+  const p = pets.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm("确定删除「" + p.name + "」的档案？其所有健康记录将一并删除。")) return;
+  pets = pets.filter(x => x.id !== id);
+  records = records.filter(r => r.petId !== id);
+  if (selId === id) selId = pets.length ? pets[0].id : null;
+  savePets(); saveRecs(); saveSel();
+  toast("已删除档案");
+  renderAll();
+}
+
+function openRecordModal() {
+  if (!cur()) { toast("请先添加宠物档案"); return; }
+  openModal(
+    "<h3>给「" + esc(cur().name) + "」记一笔</h3>" +
+    '<form id="recForm">' +
+      '<label>记录类型</label><div class="type-tabs">' +
+        '<label><input type="radio" name="type" value="weight" checked><span>⚖️ 体重</span></label>' +
+        '<label><input type="radio" name="type" value="vaccine"><span>💉 疫苗</span></label>' +
+        '<label><input type="radio" name="type" value="deworm"><span>🛡️ 驱虫</span></label>' +
+      "</div>" +
+      '<label>日期<input type="date" name="date" required value="' + todayStr() + '"></label>' +
+      '<div class="field-group show" data-group="weight">' +
+        '<label>体重（kg）<input type="number" name="value" step="0.1" min="0" max="120" placeholder="如：5.8"></label>' +
+      "</div>" +
+      '<div class="field-group" data-group="vaccine">' +
+        '<label>疫苗名称<input type="text" name="vname" maxlength="20" placeholder="如：狂犬疫苗" value="狂犬疫苗"></label>' +
+        '<label>下次接种时间<input type="date" name="vnext"></label>' +
+      "</div>" +
+      '<div class="field-group" data-group="deworm">' +
+        '<label>驱虫项目<input type="text" name="dname" maxlength="20" placeholder="如：体内驱虫" value="体内驱虫"></label>' +
+        '<label>下次驱虫时间<input type="date" name="dnext"></label>' +
+      "</div>" +
+      '<label>备注<input type="text" name="note" maxlength="40" placeholder="选填"></label>' +
+      '<button class="btn primary block" type="submit">保存记录</button>' +
+    "</form>"
+  );
+  const form = document.getElementById("recForm");
+  form.addEventListener("change", e => {
+    if (e.target.name !== "type") return;
+    form.querySelectorAll(".field-group").forEach(g => g.classList.toggle("show", g.dataset.group === e.target.value));
+    const v = form.querySelector('[name="value"]');
+    v.required = e.target.value === "weight";
+  });
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const type = String(fd.get("type"));
+    const date = String(fd.get("date") || todayStr());
+    const note = String(fd.get("note") || "").trim();
+    const rec = { id: uid(), petId: selId, type, date };
+    if (type === "weight") {
+      const v = parseFloat(fd.get("value"));
+      if (isNaN(v) || v <= 0) { toast("请填写体重数值"); return; }
+      rec.value = v;
+    } else if (type === "vaccine") {
+      rec.name = String(fd.get("vname") || "疫苗").trim() || "疫苗";
+      rec.next = String(fd.get("vnext") || "");
+    } else if (type === "deworm") {
+      rec.name = String(fd.get("dname") || "驱虫").trim() || "驱虫";
+      rec.next = String(fd.get("dnext") || "");
+    }
+    if (note) rec.note = note;
+    records.push(rec);
+    saveRecs();
+    closeModal();
+    toast("已记录 " + REC_META[type].ico + " " + REC_META[type].label);
+    if (currentView === "profile") renderProfile(); else renderAll();
+  });
+}
+
+function openDiaryModal() {
+  if (!cur()) { toast("请先添加宠物档案"); return; }
+  openModal(
+    "<h3>✍️ 写一篇「" + esc(cur().name) + "」的日记</h3>" +
+    '<form id="diaryForm">' +
+      '<label>日期<input type="date" name="date" required value="' + todayStr() + '"></label>' +
+      "<label>今天的心情</label><div class=\"emoji-pick\">" +
+        MOODS.map((m, i) => '<label class="ep"><input type="radio" name="mood" value="' + m + '"' + (i === 0 ? " checked" : "") + '><span>' + m + "</span></label>").join("") +
+      "</div>" +
+      '<label>日记内容<textarea name="content" required maxlength="200" placeholder="今天发生了什么有趣的事…"></textarea></label>' +
+      '<button class="btn primary block" type="submit">发布到时间线</button>' +
+    "</form>"
+  );
+  document.getElementById("diaryForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    records.push({
+      id: uid(), petId: selId, type: "diary",
+      date: String(fd.get("date") || todayStr()),
+      mood: String(fd.get("mood") || "😀"),
+      content: String(fd.get("content") || "").trim()
+    });
+    saveRecs();
+    closeModal();
+    toast("日记已写入时间线 📝");
+    renderAll();
+    document.querySelector('[data-view="timeline"]').click();
+  });
+}
+
+function delRecord(id) {
+  records = records.filter(r => r.id !== id);
+  saveRecs();
+  toast("记录已删除");
+  renderAll();
+}
+
+function publishPost() {
+  const ta = document.getElementById("postText");
+  const text = (ta.value || "").trim();
+  if (!text) { toast("写点什么再发布吧～"); return; }
+  const p = cur();
+  posts.unshift({
+    id: uid(), mine: true, author: "我", avatar: p ? p.avatar : "🙂",
+    city: city === "全部" ? "本地" : city, ts: Date.now(), content: text, likes: 0
+  });
+  savePosts();
+  toast("动态已发布 🎉");
+  renderCommunity();
+}
+
+function likePost(id) {
+  const pt = posts.find(x => x.id === id);
+  if (!pt) return;
+  const i = likedIds.indexOf(id);
+  if (i >= 0) { likedIds.splice(i, 1); pt.likes = Math.max(0, pt.likes - 1); }
+  else { likedIds.push(id); pt.likes++; }
+  LS.set(KEYS.likes, likedIds);
+  savePosts();
+  renderCommunity();
+}
+
+function delPost(id) {
+  posts = posts.filter(x => x.id !== id);
+  likedIds = likedIds.filter(x => x !== id);
+  savePosts(); LS.set(KEYS.likes, likedIds);
+  toast("动态已删除");
+  renderCommunity();
+}
+
+function resetDemo() {
+  if (!confirm("确定重置为演示数据？你手动添加的内容将被清除。")) return;
+  [KEYS.pets, KEYS.recs, KEYS.posts, KEYS.likes, KEYS.sel, KEYS.city, KEYS.seeded].forEach(LS.del);
+  pets = []; records = []; posts = []; likedIds = []; selId = null; city = "全部";
+  seed();
+  renderAll();
+  toast("已恢复演示数据");
+}
+
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  if (act === "switch-pet") switchPet(id);
+  else if (act === "add-pet") openPetModal(null);
+  else if (act === "edit-pet") openPetModal(id);
+  else if (act === "del-pet") delPet(id);
+  else if (act === "add-record") openRecordModal();
+  else if (act === "del-record") delRecord(id);
+  else if (act === "add-diary") openDiaryModal();
+  else if (act === "post") publishPost();
+  else if (act === "like") likePost(id);
+  else if (act === "del-post") delPost(id);
+  else if (act === "wave") toast("已向 " + el.dataset.name + " 发出打招呼请求（演示）👋");
+  else if (act === "reset-demo") resetDemo();
+});
+
+seed();
+renderAll();
+</script>
+</body>
+</html>
